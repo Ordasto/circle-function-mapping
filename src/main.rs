@@ -31,9 +31,8 @@ async fn main() {
             return (thet, thet*1.2);
         }
     ).collect();
-
+    let mut running = false;
     let mut modif = 0.0;
-
     loop {
 
         clear_background(BLACK);
@@ -46,19 +45,30 @@ async fn main() {
         // p2.x = center.x + radius * theta.cos();
         // p2.y = center.y + radius * theta.sin();
 
-        for (theta1,theta2) in lines.iter_mut() {
-            // *theta1 += 0.00;
-            *theta2 = *theta1 * modif;
-            modif += 0.1;
-            let x1 = center.x + radius * theta1.cos();
-            let y1 = center.y + radius * theta1.sin();  
-            let x2 = center.x + radius * theta2.cos();
-            let y2 = center.y + radius * theta2.sin();
-            println!("{} {} {} {}",x1,y1,x2,y2);
-            draw_line(x1, y1, x2, y2, 2.0, WHITE);
+        if running {
+            for (theta1,theta2) in lines.iter_mut() {
+                // *theta1 += 0.00;
+                // at some point, make the theta calc a function pointer or something
+                // so that i can pass in different functions faster, takes in a f32 spits out f32 easy
+                // ALSO make a gui to modify the parameters, imgui stype (immediate gui)
+
+                *theta2 = *theta1 * modif;
+                modif += 0.00005;
+
+                let x1 = center.x + radius * theta1.cos();
+                let y1 = center.y + radius * theta1.sin();  
+                let x2 = center.x + radius * theta2.cos();
+                let y2 = center.y + radius * theta2.sin();
+
+                draw_line(x1, y1, x2, y2, 2.0, WHITE);
+            }
         }
-
-
+        if is_key_pressed(KeyCode::Space){
+            running = !running;
+        }
+        if is_key_down(KeyCode::Escape){
+            break;
+        }
 
         next_frame().await;
     }
@@ -77,3 +87,6 @@ fn draw_linev(p1: Vec2, p2: Vec2) {
 
 // fn draw_line_theta()
 
+// cool
+// *theta2 = *theta1 + modif;
+// modif += 0.00005;
