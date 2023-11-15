@@ -7,32 +7,65 @@ use macroquad::{
     ui::{root_ui, widgets},
 };
 
-type KeyBinds = Vec<(macroquad::input::KeyCode, Box<dyn Fn(&&mut Settings)>)>;
-
-struct Settings {
-    fullscreen: bool,
+pub struct State {
     running: bool,
     drawing_gui: bool,
     circle_size: f32,
-    keybinds: KeyBinds,
 }
-impl Settings {
-    fn new() -> Settings {
-        Settings {
-            fullscreen: false,
+impl Default for State {
+    fn default() -> Self {
+        State {
             running: true,
             drawing_gui: true,
             circle_size: 0.9,
-            keybinds: KeyBinds::new(),
         }
+    }
+}
+
+impl State {
+    pub fn update(&mut self) {
+        self.process_keypresses();
+        self.draw_gui();
     }
 
     fn process_keypresses(&mut self) {
-        self.keybinds.iter().for_each(|(key, func)| {
-            if is_key_pressed(*key) {
-                func(&self);
-            }
-        });
+        if is_key_pressed(KeyCode::Space) {
+            self.running = !self.running;
+        }
+
+        if is_key_pressed(KeyCode::E) {
+            self.drawing_gui = !self.drawing_gui;
+        }
+
+        if is_key_down(KeyCode::Escape) {
+            macroquad::miniquad::window::request_quit();
+        }
+    }
+
+    fn draw_gui(&self) {
+        if self.drawing_gui {
+            widgets::Window::new(21, vec2(50., 50.), vec2(200., 200.))
+                .label("Settings")
+                .movable(true)
+                .titlebar(true)
+                .ui(&mut root_ui(), |ui| {
+                    ui.label(None, "Some random text");
+                    if ui.button(None, "click me") {
+                        println!("hi");
+                    }
+
+                    ui.separator();
+
+                    ui.label(None, "Some other random text");
+                    if ui.button(None, "other button") {
+                        println!("hi2");
+                    }
+
+                    ui.separator();
+
+                    ui.separator();
+                });
+        }
     }
 }
 
@@ -45,12 +78,10 @@ async fn main() {
     //     let w = 1920.0 * 0.6;
     //     let h = 1080.0 * 0.6;
     //     request_new_screen_size(w, h);
-    let mut settings = Settings::new();
-    settings
-        .keybinds
-        .push((KeyCode::Space, Box::new(|s| s.running = !s.running)));
+    let mut state = State::default();
+
     //let circle_size = 0.9; // percent of screen to fill,
-    let radius = (h * settings.circle_size) / 2.0; // fit to height,
+    let radius = (h * state.circle_size) / 2.0; // fit to height,
 
     let mut center = Vec2 {
         x: w / 2.0,
@@ -92,7 +123,7 @@ async fn main() {
             // at some point, make the theta calc a function pointer or something
             // so that i can pass in different functions faster
             // ALSO make a gui to modify the parameters, imgui stype (immediate gui)
-            if settings.running {
+            if state.running {
                 // do custom theta_function  fn theta_function(f32, f32) -> (f32, f32)
                 // variable that stores currently selected theta function, function to set it
                 *theta2 = *theta1 + modif;
@@ -107,40 +138,10 @@ async fn main() {
             draw_line(x1, y1, x2, y2, 0.9, WHITE);
         }
 
-        // [DO THIS BEFORE IT'S TOO GROSS]
-        // i hate this current system, use callbacks or some shit
-        // have a hash list of key:value pairs, new keybinding is appending a key:KeyCode and value:Vec<functions>
-        // if keybind already exsists, add function to vec, else new pair
-
-        // if is_key_pressed(KeyCode::Space) {
-        //     running = !running;
-        // }
-
-        // if is_key_pressed(KeyCode::E) {
-        //     drawing_gui = !drawing_gui;
-        // }
-        //if is_key_down(KeyCode::Escape) {
-        //     break;
-        // }
-
-        // could put this inside the function with a paramter to clean it up
-        if settings.drawing_gui {
-            draw_gui();
-        }
+        state.update();
 
         next_frame().await;
     }
-}
-
-fn draw_gui() {
-    widgets::Window::new(21, vec2(50., 50.), vec2(200., 200.))
-        .label("Settings")
-        .movable(true)
-        .titlebar(true)
-        .ui(&mut root_ui(), |ui| {
-            ui.label(vec2(2.0, 5.0), "1");
-            ui.label(vec2(2.0, 15.0), "2");
-        });
 }
 
 // Pulsing constrictiong thing
