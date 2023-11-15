@@ -1,13 +1,14 @@
-use std::collections::HashMap;
-
 use macroquad::{
     input::KeyCode,
     miniquad::window::screen_size,
     prelude::*,
-    ui::{root_ui, widgets},
+    ui::{
+        hash, root_ui,
+        widgets::{self, Group},
+    },
 };
 
-fn window_conf() -> Conf{
+fn window_conf() -> Conf {
     Conf {
         window_title: "Circle Mapping".to_string(),
         // icon:
@@ -48,6 +49,10 @@ impl Default for State {
     }
 }
 
+fn new_group(w: f32, h: f32, x: f32, y: f32) -> Group {
+    Group::new(hash!(), vec2(w, h)).position(vec2(x, y))
+}
+
 impl State {
     pub fn update(&mut self) {
         self.process_keypresses();
@@ -61,7 +66,6 @@ impl State {
     fn process_keypresses(&mut self) {
         if is_key_pressed(KeyCode::Space) {
             self.running = !self.running;
-
         }
 
         if is_key_pressed(KeyCode::E) {
@@ -74,47 +78,32 @@ impl State {
     }
 
     fn draw_gui(&mut self) {
+        let width = 200.0;
         if self.drawing_gui {
-            // let mut ui = root_ui();
-            // ui.canvas()
-            //     .rect(Rect::new(5.0, 5.0, 150.0, 200.0), GRAY, GRAY);
-            // if ui.button(vec2(10.0, 10.0), "Toggle Fullscreen") {
-            //     self.fullscreen = !self.fullscreen;
-            //     set_fullscreen(self.fullscreen);
-
-            //     // When switchout out of fullscreen, it sets the screensize to max
-            //     // this means it will revert to the old screensize before fullscreening
-            //     if self.fullscreen == false {
-            //         request_new_screen_size(self.screen_size.w, self.screen_size.h);
-            //     }
-            // }
-            // if ui.button(vec2(10.0, 40.0), "Start/Stop") {
-            //     self.running = !self.running;
-            // }
-
             // This window format might look better, but it's harder and I just wan't to get this ui done
-            widgets::Window::new(1, vec2(50., 50.), vec2(200., 200.))
+            widgets::Window::new(hash!(), vec2(50., 50.), vec2(width, 200.))
                 .label("Settings")
                 .movable(true)
                 .titlebar(true)
                 .ui(&mut root_ui(), |ui| {
-                    ui.group(2, vec2(190.0, 190.0), |ui| {
+                    new_group(width, 100.0, 0., 0.).ui(ui, |ui| {
                         if ui.button(vec2(10.0, 10.0), "Toggle Fullscreen") {
                             self.fullscreen = !self.fullscreen;
                             set_fullscreen(self.fullscreen);
 
                             // When switchout out of fullscreen, it sets the screensize to max
                             // this means it will revert to the old screensize before fullscreening
-            
                             if self.fullscreen == false {
                                 request_new_screen_size(self.screen_size.w, self.screen_size.h);
                             }
                         }
-                        if ui.button(vec2(10.0, 40.0), "Start/Stop") {
-                            self.running = !self.running;
-                        }
-                        ui.tabbar(3, vec2(50.0, 50.0), &["-","+"]);
-                        ui.checkbox(22, "Running", &mut self.running);
+                        // if ui.button(vec2(10.0, 40.0), "Start/Stop") {
+                        //     self.running = !self.running;
+                        // }
+                    });
+
+                    new_group(width, 100.0, 0.0 , 100.0).ui(ui, |ui| {
+                        ui.checkbox(hash!(), "Running", &mut self.running);
                     });
                 });
         }
@@ -149,8 +138,8 @@ async fn main() {
     loop {
         clear_background(BLACK);
 
-        center.x = state.screen_size.w / 2.;
-        center.y = state.screen_size.h / 2.;
+        center.x = screen_width() / 2.;
+        center.y = screen_height() / 2.;
 
         // Draw_circle kinda blocky
         draw_poly_lines(center.x, center.y, 255, radius, 0.0, 1.0, WHITE);
